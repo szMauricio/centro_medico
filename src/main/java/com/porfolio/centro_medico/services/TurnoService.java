@@ -10,34 +10,59 @@ import org.springframework.transaction.annotation.Transactional;
 import com.porfolio.centro_medico.models.Medico;
 import com.porfolio.centro_medico.models.Paciente;
 import com.porfolio.centro_medico.models.Turno;
+import com.porfolio.centro_medico.models.dto.TurnoRequest;
+import com.porfolio.centro_medico.models.dto.TurnoResponse;
 import com.porfolio.centro_medico.models.enums.EstadoTurno;
+import com.porfolio.centro_medico.models.mappers.DtoMapper;
 import com.porfolio.centro_medico.repositories.TurnoRepository;
 
 @Service
 @Transactional
 public class TurnoService implements ITurnoService {
     private final TurnoRepository turnoRepository;
+    private final PacienteService pacienteService;
+    private final MedicoService medicoService;
+    private final DtoMapper dtoMapper;
 
-    public TurnoService(TurnoRepository turnoRepository) {
+    public TurnoService(TurnoRepository turnoRepository, PacienteService pacienteService, MedicoService medicoService,
+            DtoMapper dtoMapper) {
         this.turnoRepository = turnoRepository;
+        this.pacienteService = pacienteService;
+        this.medicoService = medicoService;
+        this.dtoMapper = dtoMapper;
     }
 
     @Override
-    public Turno createTurno(Turno turno) {
-        if (turno.getFechaHora().isBefore(LocalDateTime.now())) {
+    public Turno createTurno(TurnoRequest request) {
+        if (request.fechaHora().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("No se pueden crear turnos en fechas pasadas");
         }
 
+        Paciente paciente = pacienteService.findById(request.pacienteId())
+                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+
+        Medico medico = medicoService.findById(request.medicoId())
+                .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
+
+        // Validar que no exista un turno en la misma fecha/hora para el mismo médico
         List<Turno> turnosExistentes = turnoRepository.findByMedicoAndFechaHoraBetween(
-                turno.getMedico(),
-                turno.getFechaHora().minusMinutes(30),
-                turno.getFechaHora().plusMinutes(30));
+                medico,
+                request.fechaHora().minusMinutes(30),
+                request.fechaHora().plusMinutes(30));
 
         if (!turnosExistentes.isEmpty()) {
             throw new RuntimeException("El médico ya tiene un turno en ese horario");
         }
 
+        Turno turno = dtoMapper.toEntity(request, paciente, medico);
         return turnoRepository.save(turno);
+    }
+
+    @Override
+    public TurnoResponse getTurnoResponse(Long id) {
+        Turno turno = findById(id)
+                .orElseThrow(() -> new RuntimeException("Turno no encontrado"));
+        return dtoMapper.toResponse(turno);
     }
 
     @Override
@@ -71,15 +96,31 @@ public class TurnoService implements ITurnoService {
     }
 
     @Override
-    public Turno updateTurno(Long id, Turno turnoDetails) {
+    public Turno updateTurno(Long id, TurnoRequest request) {
         Turno turno = findById(id)
-                .orElseThrow(() -> new RuntimeException("Turno no encontrado con id: " + id));
+                .orElseThrow(() -> new RuntimeException("Turno no encontrado"));
 
-        if (turnoDetails.getObservaciones() != null) {
-            turno.setObservaciones(turnoDetails.getObservaciones());
+        // Si se cambia la fecha/hora, validar nuevamente
+        if (request.fechaHora() != null && !request.fechaHora().equals(turno.getFechaHora())) {
+            if (request.fechaHora().isBefore(LocalDateTime.now())) {
+                throw new RuntimeException("No se puede cambiar a una fecha pasada");
+            }
+
+            // Validar disponibilidad del médico en la nueva fecha
+            List<Turno> turnosExistentes = turnoRepository.findByMedicoAndFechaHoraBetween(
+                    turno.getMedico(),
+                    request.fechaHora().minusMinutes(30),
+                    request.fechaHora().plusMinutes(30));
+
+            if (!turnosExistentes.isEmpty()) {
+                throw new RuntimeException("El médico ya tiene un turno en ese horario");
+            }
+
+            turno.setFechaHora(request.fechaHora());
         }
-        if (turnoDetails.getEstado() != null) {
-            turno.setEstado(turnoDetails.getEstado());
+
+        if (request.observaciones() != null) {
+            turno.setObservaciones(request.observaciones());
         }
 
         turno.setUpdatedAt(LocalDateTime.now());

@@ -8,25 +8,52 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.porfolio.centro_medico.models.Medico;
+import com.porfolio.centro_medico.models.User;
+import com.porfolio.centro_medico.models.dto.AuthRequest;
+import com.porfolio.centro_medico.models.dto.MedicoRequest;
+import com.porfolio.centro_medico.models.dto.MedicoResponse;
 import com.porfolio.centro_medico.models.enums.Especialidad;
+import com.porfolio.centro_medico.models.enums.Role;
+import com.porfolio.centro_medico.models.mappers.DtoMapper;
 import com.porfolio.centro_medico.repositories.MedicoRepository;
 
 @Service
 @Transactional
 public class MedicoService implements IMedicoService {
     private final MedicoRepository medicoRepository;
+    private final UserService userService;
+    private final DtoMapper dtoMapper;
 
-    public MedicoService(MedicoRepository medicoRepository) {
+    public MedicoService(MedicoRepository medicoRepository, UserService userService, DtoMapper dtoMapper) {
         this.medicoRepository = medicoRepository;
+        this.userService = userService;
+        this.dtoMapper = dtoMapper;
     }
 
     @Override
-    public Medico createMedico(Medico medico) {
-        if (medicoRepository.findByEmail(medico.getEmail()).isPresent()) {
+    public Medico createMedico(MedicoRequest request) {
+        if (medicoRepository.findByEmail(request.email()).isPresent()) {
             throw new RuntimeException("El email ya está registrado");
         }
 
+        User user = userService.createUser(
+                new AuthRequest(
+                        request.username(),
+                        request.password(),
+                        request.email()),
+                Role.ROLE_MEDICO);
+
+        Medico medico = dtoMapper.toEntity(request);
+        medico.setUser(user);
+
         return medicoRepository.save(medico);
+    }
+
+    @Override
+    public MedicoResponse getMedicoResponse(Long id) {
+        Medico medico = findById(id)
+                .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
+        return dtoMapper.toResponse(medico);
     }
 
     @Override
@@ -50,20 +77,12 @@ public class MedicoService implements IMedicoService {
     }
 
     @Override
-    public Medico updateMedico(Long id, Medico details) {
+    public Medico updateMedico(Long id, MedicoRequest request) {
         Medico medico = findById(id).orElseThrow(() -> new RuntimeException("Médico no encontrado con id: " + id));
 
-        if (details.getTelefono() != null) {
-            medico.setTelefono(details.getTelefono());
-        }
-        if (details.getIsActive() != null) {
-            medico.setIsActive(details.getIsActive());
-        }
-        if (details.getEspecialidad() != null) {
-            medico.setEspecialidad(details.getEspecialidad());
-        }
-
+        dtoMapper.updateMedicoFromRequest(medico, request);
         medico.setUpdatedAt(LocalDateTime.now());
+
         return medicoRepository.save(medico);
     }
 

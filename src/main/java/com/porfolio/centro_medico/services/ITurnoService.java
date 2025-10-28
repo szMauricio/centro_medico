@@ -7,9 +7,11 @@ import java.util.Optional;
 import com.porfolio.centro_medico.models.Medico;
 import com.porfolio.centro_medico.models.Paciente;
 import com.porfolio.centro_medico.models.Turno;
+import com.porfolio.centro_medico.models.dto.TurnoRequest;
+import com.porfolio.centro_medico.models.dto.TurnoResponse;
 
 public interface ITurnoService {
-    Turno createTurno(Turno turno);
+    Turno createTurno(TurnoRequest request);
 
     List<Turno> findAll();
 
@@ -23,9 +25,11 @@ public interface ITurnoService {
 
     List<Turno> findByMedicoAndFechaHoraBetween(Medico medico, LocalDateTime start, LocalDateTime end);
 
-    Turno updateTurno(Long id, Turno turnoDetails);
+    Turno updateTurno(Long id, TurnoRequest request);
 
     void cancelarTurno(Long id);
 
     void completarTurno(Long id);
+
+    TurnoResponse getTurnoResponse(Long id);
 }

@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.porfolio.centro_medico.models.User;
+import com.porfolio.centro_medico.models.dto.AuthRequest;
+import com.porfolio.centro_medico.models.enums.Role;
+import com.porfolio.centro_medico.models.mappers.DtoMapper;
 import com.porfolio.centro_medico.repositories.UserRepository;
 
 @Service
@@ -15,23 +18,27 @@ public class UserService implements IUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final DtoMapper dtoMapper;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, DtoMapper dtoMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.dtoMapper = dtoMapper;
     }
 
     @Override
-    public User createUser(User user) {
-        if (existsByUsername(user.getUsername())) {
+    public User createUser(AuthRequest request, Role role) {
+        if (existsByUsername(request.username())) {
             throw new RuntimeException("El username ya está en uso");
         }
 
-        if (existsByEmail(user.getEmail())) {
+        if (existsByEmail(request.email())) {
             throw new RuntimeException("El email ya está en uso");
         }
 
+        User user = dtoMapper.toEntity(request, role);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
         return userRepository.save(user);
     }
 
