@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.porfolio.centro_medico.config.JwtUtil;
 import com.porfolio.centro_medico.models.dto.LoginRequest;
 import com.porfolio.centro_medico.models.dto.RegisterRequest;
+import com.porfolio.centro_medico.models.dto.RegisterResponse;
 import com.porfolio.centro_medico.models.dto.UserResponse;
 import com.porfolio.centro_medico.models.enums.Role;
 import com.porfolio.centro_medico.services.UserService;
@@ -20,16 +22,26 @@ import jakarta.validation.Valid;
 @RequestMapping("/auth")
 public class AuthController {
     private final UserService userService;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(UserService userService) {
+    public AuthController(UserService userService, JwtUtil jwtUtil) {
         this.userService = userService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest request) {
         try {
-            UserResponse response = userService.createUser(request, Role.ROLE_USER);
-            return ResponseEntity.ok(response);
+            UserResponse userResponse = userService.createUser(request, Role.ROLE_USER);
+
+            // Generar JWT después del registro
+            String token = jwtUtil.generateToken(
+                    userResponse.username(),
+                    userResponse.id(),
+                    userResponse.role().name());
+
+            RegisterResponse registerResponse = new RegisterResponse(token, userResponse);
+            return ResponseEntity.ok(registerResponse);
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
@@ -50,7 +62,15 @@ public class AuthController {
             }
 
             UserResponse userResponse = userOpt.get();
-            return ResponseEntity.ok(userResponse);
+
+            // Generar JWT
+            String token = jwtUtil.generateToken(
+                    userResponse.username(),
+                    userResponse.id(),
+                    userResponse.role().name());
+
+            RegisterResponse registerResponse = new RegisterResponse(token, userResponse);
+            return ResponseEntity.ok(registerResponse);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error en login: " + e.getMessage());
         }
