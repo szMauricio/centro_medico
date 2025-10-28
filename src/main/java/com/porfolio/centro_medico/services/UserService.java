@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.porfolio.centro_medico.models.User;
 import com.porfolio.centro_medico.models.dto.AuthRequest;
+import com.porfolio.centro_medico.models.dto.UserResponse;
 import com.porfolio.centro_medico.models.enums.Role;
 import com.porfolio.centro_medico.models.mappers.DtoMapper;
 import com.porfolio.centro_medico.repositories.UserRepository;
@@ -27,7 +28,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public User createUser(AuthRequest request, Role role) {
+    public UserResponse createUser(AuthRequest request, Role role) {
         if (existsByUsername(request.username())) {
             throw new RuntimeException("El username ya está en uso");
         }
@@ -39,22 +40,25 @@ public class UserService implements IUserService {
         User user = dtoMapper.toEntity(request, role);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return dtoMapper.toResponse(savedUser);
     }
 
     @Override
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public Optional<UserResponse> findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(dtoMapper::toResponse);
     }
 
     @Override
-    public Optional<User> findById(Long id) {
-        return userRepository.findById(id);
+    public Optional<UserResponse> findById(Long id) {
+        return userRepository.findById(id)
+                .map(dtoMapper::toResponse);
     }
 
     @Override
     public boolean validateCredentials(String username, String password) {
-        Optional<User> userOpt = findByUsername(username);
+        Optional<User> userOpt = findEntityByUsername(username);
         if (userOpt.isEmpty()) {
             return false;
         }
@@ -65,7 +69,8 @@ public class UserService implements IUserService {
 
     @Override
     public void toggleUserStatus(Long userId, boolean isActive) {
-        User user = findById(userId).orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + userId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + userId));
         user.setIsActive(isActive);
         userRepository.save(user);
     }
@@ -78,5 +83,15 @@ public class UserService implements IUserService {
     @Override
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public Optional<User> findEntityById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    @Override
+    public Optional<User> findEntityByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 }

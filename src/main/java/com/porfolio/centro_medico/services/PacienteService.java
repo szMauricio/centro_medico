@@ -1,7 +1,9 @@
 package com.porfolio.centro_medico.services;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,63 +29,67 @@ public class PacienteService implements IPacienteService {
     }
 
     @Override
-    public Paciente createPaciente(PacienteRequest request) {
-        if (pacienteRepository.existsByDni(request.dni())) {
+    public PacienteResponse createPaciente(PacienteRequest request) {
+        if (existsByDni(request.dni())) {
             throw new RuntimeException("El DNI ya está registrado");
         }
 
-        User user = userService.findById(request.userId())
+        User user = userService.findEntityById(request.userId())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         Paciente paciente = dtoMapper.toEntity(request);
         paciente.setUser(user);
 
-        return pacienteRepository.save(paciente);
+        Paciente savedPaciente = pacienteRepository.save(paciente);
+        return dtoMapper.toResponse(savedPaciente); // ← Devuelve DTO
     }
 
     @Override
-    public PacienteResponse getPacienteResponse(Long id) {
-        Paciente paciente = findById(id)
+    public List<PacienteResponse> findAll() {
+        return pacienteRepository.findAll().stream()
+                .map(dtoMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<PacienteResponse> findById(Long id) {
+        return pacienteRepository.findById(id)
+                .map(dtoMapper::toResponse);
+    }
+
+    @Override
+    public Optional<PacienteResponse> findByDni(String dni) {
+        return pacienteRepository.findByDni(dni)
+                .map(dtoMapper::toResponse);
+    }
+
+    @Override
+    public PacienteResponse updatePaciente(Long id, PacienteRequest request) {
+        Paciente paciente = pacienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
-        return dtoMapper.toResponse(paciente);
-    }
-
-    @Override
-    public List<Paciente> findAll() {
-        return pacienteRepository.findAll();
-    }
-
-    @Override
-    public Optional<Paciente> findById(Long id) {
-        return pacienteRepository.findById(id);
-    }
-
-    @Override
-    public Optional<Paciente> findByDni(String dni) {
-        return pacienteRepository.findByDni(dni);
-    }
-
-    @Override
-    public Paciente updatePaciente(Long id, PacienteRequest request) {
-        Paciente paciente = findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente no encontrado con id: " + id));
 
         dtoMapper.updatePacienteFromRequest(paciente, request);
-        paciente.setUpdatedAt(java.time.LocalDateTime.now());
+        paciente.setUpdatedAt(LocalDateTime.now());
 
-        return pacienteRepository.save(paciente);
+        Paciente updatedPaciente = pacienteRepository.save(paciente);
+        return dtoMapper.toResponse(updatedPaciente);
     }
 
     @Override
     public void deletePaciente(Long id) {
-        Paciente paciente = findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente no encontrado con id: " + id));
+        Paciente paciente = pacienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
         pacienteRepository.delete(paciente);
     }
 
     @Override
     public boolean existsByDni(String dni) {
         return pacienteRepository.existsByDni(dni);
+    }
+
+    @Override
+    public Optional<Paciente> findEntityById(Long id) {
+        return pacienteRepository.findById(id);
     }
 
 }

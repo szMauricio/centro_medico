@@ -4,14 +4,15 @@ import java.util.Optional;
 
 import com.porfolio.centro_medico.models.User;
 import com.porfolio.centro_medico.models.dto.AuthRequest;
+import com.porfolio.centro_medico.models.dto.UserResponse;
 import com.porfolio.centro_medico.models.enums.Role;
 
 public interface IUserService {
-    User createUser(AuthRequest request, Role role);
+    UserResponse createUser(AuthRequest request, Role role);
 
-    Optional<User> findByUsername(String username);
+    Optional<UserResponse> findByUsername(String username);
 
-    Optional<User> findById(Long id);
+    Optional<UserResponse> findById(Long id);
 
     boolean validateCredentials(String username, String password);
 
@@ -20,4 +21,8 @@ public interface IUserService {
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
+    Optional<User> findEntityById(Long id);
+
+    Optional<User> findEntityByUsername(String username);
 }

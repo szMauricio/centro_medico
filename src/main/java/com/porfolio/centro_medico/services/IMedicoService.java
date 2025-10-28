@@ -9,21 +9,21 @@ import com.porfolio.centro_medico.models.dto.MedicoResponse;
 import com.porfolio.centro_medico.models.enums.Especialidad;
 
 public interface IMedicoService {
-    Medico createMedico(MedicoRequest request);
+    MedicoResponse createMedico(MedicoRequest request);
 
-    List<Medico> findAll();
+    List<MedicoResponse> findAll();
 
-    List<Medico> findAllActive();
+    List<MedicoResponse> findAllActive();
 
-    Optional<Medico> findById(Long id);
+    Optional<MedicoResponse> findById(Long id);
 
-    List<Medico> findByEspecialidad(Especialidad especialidad);
+    List<MedicoResponse> findByEspecialidad(Especialidad especialidad);
 
-    Medico updateMedico(Long id, MedicoRequest request);
+    MedicoResponse updateMedico(Long id, MedicoRequest request);
 
     void deactivateMedico(Long id);
 
     void activateMedico(Long id);
 
-    MedicoResponse getMedicoResponse(Long id);
+    Optional<Medico> findEntityById(Long id);
 }

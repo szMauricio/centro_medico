@@ -3,6 +3,7 @@ package com.porfolio.centro_medico.services;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,15 +34,15 @@ public class TurnoService implements ITurnoService {
     }
 
     @Override
-    public Turno createTurno(TurnoRequest request) {
+    public TurnoResponse createTurno(TurnoRequest request) {
         if (request.fechaHora().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("No se pueden crear turnos en fechas pasadas");
         }
 
-        Paciente paciente = pacienteService.findById(request.pacienteId())
+        Paciente paciente = pacienteService.findEntityById(request.pacienteId())
                 .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
 
-        Medico medico = medicoService.findById(request.medicoId())
+        Medico medico = medicoService.findEntityById(request.medicoId())
                 .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
 
         // Validar que no exista un turno en la misma fecha/hora para el mismo médico
@@ -55,49 +56,47 @@ public class TurnoService implements ITurnoService {
         }
 
         Turno turno = dtoMapper.toEntity(request, paciente, medico);
-        return turnoRepository.save(turno);
+
+        Turno savedTurno = turnoRepository.save(turno);
+        return dtoMapper.toResponse(savedTurno);
     }
 
     @Override
-    public TurnoResponse getTurnoResponse(Long id) {
-        Turno turno = findById(id)
-                .orElseThrow(() -> new RuntimeException("Turno no encontrado"));
-        return dtoMapper.toResponse(turno);
+    public List<TurnoResponse> findAll() {
+        return turnoRepository.findAll().stream().map(dtoMapper::toResponse).collect(Collectors.toList());
     }
 
     @Override
-    public List<Turno> findAll() {
-        return turnoRepository.findAll();
+    public Optional<TurnoResponse> findById(Long id) {
+        return turnoRepository.findById(id).map(dtoMapper::toResponse);
     }
 
     @Override
-    public Optional<Turno> findById(Long id) {
-        return turnoRepository.findById(id);
+    public List<TurnoResponse> findByMedico(Medico medico) {
+        return turnoRepository.findByMedico(medico).stream().map(dtoMapper::toResponse).collect(Collectors.toList());
     }
 
     @Override
-    public List<Turno> findByMedico(Medico medico) {
-        return turnoRepository.findByMedico(medico);
+    public List<TurnoResponse> findByPaciente(Paciente paciente) {
+        return turnoRepository.findByPaciente(paciente).stream().map(dtoMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Turno> findByPaciente(Paciente paciente) {
-        return turnoRepository.findByPaciente(paciente);
+    public List<TurnoResponse> findByFechaHoraBetween(LocalDateTime start, LocalDateTime end) {
+        return turnoRepository.findByFechaHoraBetween(start, end).stream().map(dtoMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Turno> findByFechaHoraBetween(LocalDateTime start, LocalDateTime end) {
-        return turnoRepository.findByFechaHoraBetween(start, end);
+    public List<TurnoResponse> findByMedicoAndFechaHoraBetween(Medico medico, LocalDateTime start, LocalDateTime end) {
+        return turnoRepository.findByMedicoAndFechaHoraBetween(medico, start, end).stream().map(dtoMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Turno> findByMedicoAndFechaHoraBetween(Medico medico, LocalDateTime start, LocalDateTime end) {
-        return turnoRepository.findByMedicoAndFechaHoraBetween(medico, start, end);
-    }
-
-    @Override
-    public Turno updateTurno(Long id, TurnoRequest request) {
-        Turno turno = findById(id)
+    public TurnoResponse updateTurno(Long id, TurnoRequest request) {
+        Turno turno = turnoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Turno no encontrado"));
 
         // Si se cambia la fecha/hora, validar nuevamente
@@ -124,12 +123,14 @@ public class TurnoService implements ITurnoService {
         }
 
         turno.setUpdatedAt(LocalDateTime.now());
-        return turnoRepository.save(turno);
+
+        Turno updatedTurno = turnoRepository.save(turno);
+        return dtoMapper.toResponse(updatedTurno);
     }
 
     @Override
     public void cancelarTurno(Long id) {
-        Turno turno = findById(id)
+        Turno turno = turnoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Turno no encontrado con id: " + id));
 
         if (turno.getEstado() == EstadoTurno.COMPLETADO) {
@@ -143,7 +144,7 @@ public class TurnoService implements ITurnoService {
 
     @Override
     public void completarTurno(Long id) {
-        Turno turno = findById(id)
+        Turno turno = turnoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Turno no encontrado con id: " + id));
 
         if (turno.getEstado() == EstadoTurno.CANCELADO) {
