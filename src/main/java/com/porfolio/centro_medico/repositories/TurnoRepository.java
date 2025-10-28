@@ -4,11 +4,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import com.porfolio.centro_medico.models.Medico;
 import com.porfolio.centro_medico.models.Paciente;
 import com.porfolio.centro_medico.models.Turno;
 
+@Repository
 public interface TurnoRepository extends JpaRepository<Turno, Long> {
     // Encuentra turnos por médico
     List<Turno> findByMedico(Medico medico);

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.porfolio.centro_medico.models.User;
-import com.porfolio.centro_medico.models.dto.AuthRequest;
+import com.porfolio.centro_medico.models.dto.RegisterRequest;
 import com.porfolio.centro_medico.models.dto.UserResponse;
 import com.porfolio.centro_medico.models.enums.Role;
 import com.porfolio.centro_medico.models.mappers.DtoMapper;
@@ -28,7 +28,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserResponse createUser(AuthRequest request, Role role) {
+    public UserResponse createUser(RegisterRequest request, Role role) {
         if (existsByUsername(request.username())) {
             throw new RuntimeException("El username ya está en uso");
         }

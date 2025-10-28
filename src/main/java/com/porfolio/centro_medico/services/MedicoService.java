@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.porfolio.centro_medico.models.Medico;
 import com.porfolio.centro_medico.models.User;
-import com.porfolio.centro_medico.models.dto.AuthRequest;
+import com.porfolio.centro_medico.models.dto.RegisterRequest;
 import com.porfolio.centro_medico.models.dto.MedicoRequest;
 import com.porfolio.centro_medico.models.dto.MedicoResponse;
 import com.porfolio.centro_medico.models.dto.UserResponse;
@@ -39,7 +39,7 @@ public class MedicoService implements IMedicoService {
         }
 
         UserResponse userResponse = userService.createUser(
-                new AuthRequest(
+                new RegisterRequest(
                         request.username(),
                         request.password(),
                         request.email()),

@@ -3,12 +3,12 @@ package com.porfolio.centro_medico.services;
 import java.util.Optional;
 
 import com.porfolio.centro_medico.models.User;
-import com.porfolio.centro_medico.models.dto.AuthRequest;
+import com.porfolio.centro_medico.models.dto.RegisterRequest;
 import com.porfolio.centro_medico.models.dto.UserResponse;
 import com.porfolio.centro_medico.models.enums.Role;
 
 public interface IUserService {
-    UserResponse createUser(AuthRequest request, Role role);
+    UserResponse createUser(RegisterRequest request, Role role);
 
     Optional<UserResponse> findByUsername(String username);
 

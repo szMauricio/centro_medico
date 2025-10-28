@@ -6,7 +6,7 @@ import com.porfolio.centro_medico.models.Medico;
 import com.porfolio.centro_medico.models.Paciente;
 import com.porfolio.centro_medico.models.Turno;
 import com.porfolio.centro_medico.models.User;
-import com.porfolio.centro_medico.models.dto.AuthRequest;
+import com.porfolio.centro_medico.models.dto.RegisterRequest;
 import com.porfolio.centro_medico.models.dto.MedicoRequest;
 import com.porfolio.centro_medico.models.dto.MedicoResponse;
 import com.porfolio.centro_medico.models.dto.PacienteRequest;
@@ -20,7 +20,7 @@ import com.porfolio.centro_medico.models.enums.Role;
 public class DtoMapper {
     // ==================== USER MAPPERS ====================
 
-    public User toEntity(AuthRequest request, Role role) {
+    public User toEntity(RegisterRequest request, Role role) {
         User user = new User();
         user.setUsername(request.username());
         user.setPassword(request.password()); // Se encriptará en el service
