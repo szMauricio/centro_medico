@@ -2,6 +2,7 @@ package com.porfolio.centro_medico.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -32,6 +33,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/pacientes").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/pacientes/dni/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/pacientes").hasAnyAuthority("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/pacientes/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 

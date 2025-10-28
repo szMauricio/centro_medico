@@ -43,7 +43,7 @@ public class MedicoService implements IMedicoService {
                         request.username(),
                         request.password(),
                         request.email()),
-                Role.ROLE_MEDICO);
+                Role.MEDICO);
 
         User user = userService.findEntityById(userResponse.id())
                 .orElseThrow(() -> new RuntimeException("Error al crear usuario médico"));

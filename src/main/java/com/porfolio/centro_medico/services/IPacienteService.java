@@ -23,4 +23,6 @@ public interface IPacienteService {
     boolean existsByDni(String dni);
 
     Optional<Paciente> findEntityById(Long id);
+
+    PacienteResponse getPacienteResponse(Long id);
 }

@@ -41,7 +41,7 @@ public class PacienteService implements IPacienteService {
         paciente.setUser(user);
 
         Paciente savedPaciente = pacienteRepository.save(paciente);
-        return dtoMapper.toResponse(savedPaciente); // ← Devuelve DTO
+        return dtoMapper.toResponse(savedPaciente);
     }
 
     @Override
@@ -92,4 +92,10 @@ public class PacienteService implements IPacienteService {
         return pacienteRepository.findById(id);
     }
 
+    @Override
+    public PacienteResponse getPacienteResponse(Long id) {
+        Paciente paciente = pacienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Paciente no encontrado con ID: " + id));
+        return dtoMapper.toResponse(paciente);
+    }
 }

@@ -32,7 +32,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest request) {
         try {
-            UserResponse userResponse = userService.createUser(request, Role.ROLE_USER);
+            UserResponse userResponse = userService.createUser(request, Role.USER);
 
             // Generar JWT después del registro
             String token = jwtUtil.generateToken(
