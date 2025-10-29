@@ -156,4 +156,31 @@ public class TurnoService implements ITurnoService {
         turnoRepository.save(turno);
     }
 
+    @Override
+    public TurnoResponse getTurnoResponse(Long id) {
+        Turno turno = turnoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Turno no encontrado con ID: " + id));
+        return dtoMapper.toResponse(turno);
+    }
+
+    @Override
+    public List<TurnoResponse> findByMedicoId(Long medicoId) {
+        Medico medico = medicoService.findEntityById(medicoId)
+                .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
+
+        return turnoRepository.findByMedico(medico).stream()
+                .map(dtoMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TurnoResponse> findByPacienteId(Long pacienteId) {
+        Paciente paciente = pacienteService.findEntityById(pacienteId)
+                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+
+        return turnoRepository.findByPaciente(paciente).stream()
+                .map(dtoMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
 }

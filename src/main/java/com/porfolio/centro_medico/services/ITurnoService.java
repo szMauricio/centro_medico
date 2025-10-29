@@ -16,6 +16,10 @@ public interface ITurnoService {
 
     Optional<TurnoResponse> findById(Long id);
 
+    List<TurnoResponse> findByMedicoId(Long medicoId);
+
+    List<TurnoResponse> findByPacienteId(Long pacienteId);
+
     List<TurnoResponse> findByMedico(Medico medico);
 
     List<TurnoResponse> findByPaciente(Paciente paciente);
@@ -29,4 +33,6 @@ public interface ITurnoService {
     void cancelarTurno(Long id);
 
     void completarTurno(Long id);
+
+    TurnoResponse getTurnoResponse(Long id);
 }

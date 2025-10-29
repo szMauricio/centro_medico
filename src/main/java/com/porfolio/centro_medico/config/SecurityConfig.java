@@ -47,6 +47,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/medicos/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/medicos/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/medicos/**").hasAuthority("ADMIN")
+                        // Turnos
+                        .requestMatchers(HttpMethod.GET, "/turnos").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/turnos/rango").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/turnos").hasAnyAuthority("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/turnos/**/cancelar")
+                        .hasAnyAuthority("USER", "ADMIN", "MEDICO")
+                        .requestMatchers(HttpMethod.PATCH, "/turnos/**/completar").hasAnyAuthority("MEDICO", "ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
