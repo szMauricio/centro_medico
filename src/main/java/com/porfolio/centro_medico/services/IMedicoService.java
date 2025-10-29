@@ -26,4 +26,6 @@ public interface IMedicoService {
     void activateMedico(Long id);
 
     Optional<Medico> findEntityById(Long id);
+
+    MedicoResponse getMedicoResponse(Long id);
 }

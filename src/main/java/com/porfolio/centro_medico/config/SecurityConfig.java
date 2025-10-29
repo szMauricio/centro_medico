@@ -33,10 +33,20 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
+                        // Pacientes
                         .requestMatchers(HttpMethod.GET, "/pacientes").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/pacientes/dni/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/pacientes").hasAnyAuthority("USER", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/pacientes/**").hasAuthority("ADMIN")
+                        // Médicos - endpoints públicos para consulta
+                        .requestMatchers(HttpMethod.GET, "/medicos").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/medicos/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/medicos/especialidad/**").permitAll()
+                        // Médicos - endpoints protegidos para administración
+                        .requestMatchers(HttpMethod.POST, "/medicos").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/medicos/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/medicos/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/medicos/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -113,4 +113,11 @@ public class MedicoService implements IMedicoService {
         return medicoRepository.findById(id);
     }
 
+    @Override
+    public MedicoResponse getMedicoResponse(Long id) {
+        Medico medico = medicoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Medico no encontrado con ID: " + id));
+        return dtoMapper.toResponse(medico);
+    }
+
 }
