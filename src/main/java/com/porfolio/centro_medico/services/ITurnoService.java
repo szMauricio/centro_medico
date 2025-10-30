@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import com.porfolio.centro_medico.models.Medico;
 import com.porfolio.centro_medico.models.Paciente;
+import com.porfolio.centro_medico.models.Turno;
 import com.porfolio.centro_medico.models.dto.TurnoRequest;
 import com.porfolio.centro_medico.models.dto.TurnoResponse;
 
@@ -35,4 +36,6 @@ public interface ITurnoService {
     void completarTurno(Long id);
 
     TurnoResponse getTurnoResponse(Long id);
+
+    Optional<Turno> findByEntityId(Long id);
 }

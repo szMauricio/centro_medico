@@ -183,4 +183,9 @@ public class TurnoService implements ITurnoService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Optional<Turno> findByEntityId(Long id) {
+        return turnoRepository.findById(id);
+    }
+
 }

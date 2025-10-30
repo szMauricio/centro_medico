@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.porfolio.centro_medico.models.dto.TurnoRequest;
 import com.porfolio.centro_medico.models.dto.TurnoResponse;
+import com.porfolio.centro_medico.services.SecurityService;
 import com.porfolio.centro_medico.services.TurnoService;
 
 import jakarta.validation.Valid;
@@ -26,9 +27,11 @@ import jakarta.validation.Valid;
 @RequestMapping("/turnos")
 public class TurnoController {
     private final TurnoService turnoService;
+    private final SecurityService securityService;
 
-    public TurnoController(TurnoService turnoService) {
+    public TurnoController(TurnoService turnoService, SecurityService securityService) {
         this.turnoService = turnoService;
+        this.securityService = securityService;
     }
 
     @GetMapping
@@ -46,7 +49,11 @@ public class TurnoController {
     @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<?> createTurno(@Valid @RequestBody TurnoRequest request) {
         try {
-            // TODO: Validar que el pacienteId del request pertenece al usuario logueado
+            // Validar que el pacienteId del request pertenece al usuario logueado
+            if (!securityService.isOwnerOfPaciente(request.pacienteId()) && !securityService.isAdmin()) {
+                return ResponseEntity.status(403).body("No tienes permisos para crear turnos para este paciente");
+            }
+
             TurnoResponse turno = turnoService.createTurno(request);
             return ResponseEntity.ok(turno);
         } catch (RuntimeException e) {
@@ -57,7 +64,11 @@ public class TurnoController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateTurno(@PathVariable Long id, @Valid @RequestBody TurnoRequest request) {
         try {
-            // TODO: Validar permisos
+            // Validar permisos - solo admin o dueño del turno puede actualizar
+            if (!securityService.isAdmin() && !isOwnerOfTurno(id)) {
+                return ResponseEntity.status(403).body("No tienes permisos para actualizar este turno");
+            }
+
             TurnoResponse turno = turnoService.updateTurno(id, request);
             return ResponseEntity.ok(turno);
         } catch (RuntimeException e) {
@@ -68,7 +79,11 @@ public class TurnoController {
     @PatchMapping("/{id}/cancelar")
     public ResponseEntity<?> cancelarTurno(@PathVariable Long id) {
         try {
-            // TODO: Validar que el usuario tiene permisos para cancelar este turno
+            // Validar que el usuario tiene permisos para cancelar este turno
+            if (!securityService.isAdmin() && !isOwnerOfTurno(id)) {
+                return ResponseEntity.status(403).body("No tienes permisos para cancelar este turno");
+            }
+
             turnoService.cancelarTurno(id);
             return ResponseEntity.ok("Turno cancelado correctamente");
         } catch (RuntimeException e) {
@@ -79,7 +94,11 @@ public class TurnoController {
     @PatchMapping("/{id}/completar")
     public ResponseEntity<?> completarTurno(@PathVariable Long id) {
         try {
-            // TODO: Validar que el médico tiene permisos para completar este turno
+            // Validar que el médico tiene permisos para completar este turno
+            if (!securityService.isAdmin() && !isMedicoOfTurno(id)) {
+                return ResponseEntity.status(403).body("No tienes permisos para completar este turno");
+            }
+
             turnoService.completarTurno(id);
             return ResponseEntity.ok("Turno completado correctamente");
         } catch (RuntimeException e) {
@@ -106,5 +125,26 @@ public class TurnoController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
         List<TurnoResponse> turnos = turnoService.findByFechaHoraBetween(start, end);
         return ResponseEntity.ok(turnos);
+    }
+
+    // Métodos auxiliares para verificar propiedad
+    private boolean isOwnerOfTurno(Long turnoId) {
+        return turnoService.findByEntityId(turnoId)
+                .map(turno -> {
+                    Long currentUserId = securityService.getCurrentUserId();
+                    // Acceder a las relaciones a través de las Entities, no DTOs
+                    return turno.getPaciente().getUser().getId().equals(currentUserId);
+                })
+                .orElse(false);
+    }
+
+    private boolean isMedicoOfTurno(Long turnoId) {
+        return turnoService.findByEntityId(turnoId)
+                .map(turno -> {
+                    Long currentUserId = securityService.getCurrentUserId();
+                    // Acceder a las relaciones a través de las Entities, no DTOs
+                    return turno.getMedico().getUser().getId().equals(currentUserId);
+                })
+                .orElse(false);
     }
 }
