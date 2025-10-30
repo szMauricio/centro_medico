@@ -6,6 +6,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.porfolio.centro_medico.exceptions.BusinessException;
+import com.porfolio.centro_medico.exceptions.ResourceNotFoundException;
 import com.porfolio.centro_medico.models.User;
 import com.porfolio.centro_medico.models.dto.RegisterRequest;
 import com.porfolio.centro_medico.models.dto.UserResponse;
@@ -30,11 +32,11 @@ public class UserService implements IUserService {
     @Override
     public UserResponse createUser(RegisterRequest request, Role role) {
         if (existsByUsername(request.username())) {
-            throw new RuntimeException("El username ya está en uso");
+            throw new BusinessException("El username ya está en uso");
         }
 
         if (existsByEmail(request.email())) {
-            throw new RuntimeException("El email ya está en uso");
+            throw new BusinessException("El email ya está en uso");
         }
 
         User user = dtoMapper.toEntity(request, role);
@@ -70,7 +72,7 @@ public class UserService implements IUserService {
     @Override
     public void toggleUserStatus(Long userId, boolean isActive) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + userId));
         user.setIsActive(isActive);
         userRepository.save(user);
     }

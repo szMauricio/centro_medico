@@ -48,62 +48,46 @@ public class TurnoController {
     @PostMapping
     @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<?> createTurno(@Valid @RequestBody TurnoRequest request) {
-        try {
-            // Validar que el pacienteId del request pertenece al usuario logueado
-            if (!securityService.isOwnerOfPaciente(request.pacienteId()) && !securityService.isAdmin()) {
-                return ResponseEntity.status(403).body("No tienes permisos para crear turnos para este paciente");
-            }
-
-            TurnoResponse turno = turnoService.createTurno(request);
-            return ResponseEntity.ok(turno);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        // Validar que el pacienteId del request pertenece al usuario logueado
+        if (!securityService.isOwnerOfPaciente(request.pacienteId()) && !securityService.isAdmin()) {
+            return ResponseEntity.status(403).body("No tienes permisos para crear turnos para este paciente");
         }
+
+        TurnoResponse turno = turnoService.createTurno(request);
+        return ResponseEntity.ok(turno);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateTurno(@PathVariable Long id, @Valid @RequestBody TurnoRequest request) {
-        try {
-            // Validar permisos - solo admin o dueño del turno puede actualizar
-            if (!securityService.isAdmin() && !isOwnerOfTurno(id)) {
-                return ResponseEntity.status(403).body("No tienes permisos para actualizar este turno");
-            }
-
-            TurnoResponse turno = turnoService.updateTurno(id, request);
-            return ResponseEntity.ok(turno);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        // Validar permisos - solo admin o dueño del turno puede actualizar
+        if (!securityService.isAdmin() && !isOwnerOfTurno(id)) {
+            return ResponseEntity.status(403).body("No tienes permisos para actualizar este turno");
         }
+
+        TurnoResponse turno = turnoService.updateTurno(id, request);
+        return ResponseEntity.ok(turno);
     }
 
     @PatchMapping("/{id}/cancelar")
     public ResponseEntity<?> cancelarTurno(@PathVariable Long id) {
-        try {
-            // Validar que el usuario tiene permisos para cancelar este turno
-            if (!securityService.isAdmin() && !isOwnerOfTurno(id)) {
-                return ResponseEntity.status(403).body("No tienes permisos para cancelar este turno");
-            }
-
-            turnoService.cancelarTurno(id);
-            return ResponseEntity.ok("Turno cancelado correctamente");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        // Validar que el usuario tiene permisos para cancelar este turno
+        if (!securityService.isAdmin() && !isOwnerOfTurno(id)) {
+            return ResponseEntity.status(403).body("No tienes permisos para cancelar este turno");
         }
+
+        turnoService.cancelarTurno(id);
+        return ResponseEntity.ok("Turno cancelado correctamente");
     }
 
     @PatchMapping("/{id}/completar")
     public ResponseEntity<?> completarTurno(@PathVariable Long id) {
-        try {
-            // Validar que el médico tiene permisos para completar este turno
-            if (!securityService.isAdmin() && !isMedicoOfTurno(id)) {
-                return ResponseEntity.status(403).body("No tienes permisos para completar este turno");
-            }
-
-            turnoService.completarTurno(id);
-            return ResponseEntity.ok("Turno completado correctamente");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        // Validar que el médico tiene permisos para completar este turno
+        if (!securityService.isAdmin() && !isMedicoOfTurno(id)) {
+            return ResponseEntity.status(403).body("No tienes permisos para completar este turno");
         }
+
+        turnoService.completarTurno(id);
+        return ResponseEntity.ok("Turno completado correctamente");
     }
 
     @GetMapping("/medico/{medicoId}")

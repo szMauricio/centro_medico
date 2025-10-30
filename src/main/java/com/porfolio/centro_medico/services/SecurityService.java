@@ -34,13 +34,12 @@ public class SecurityService {
 
     // Verificar si el usuario actual es el dueño del paciente
     public boolean isOwnerOfPaciente(Long pacienteId) {
-        return getCurrentUser()
-                .map(user -> {
-                    // Verificar si el usuario tiene un paciente y si coincide con el ID
-                    return user.getPaciente() != null &&
-                            user.getPaciente().getId().equals(pacienteId);
-                })
-                .orElse(false);
+        if (!getCurrentUser()
+                .map(user -> user.getPaciente() != null && user.getPaciente().getId().equals(pacienteId))
+                .orElse(false)) {
+            throw new SecurityException("No tienes permisos para acceder a este recurso");
+        }
+        return true;
     }
 
     // Verificar si el usuario actual es el dueño del médico

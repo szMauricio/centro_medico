@@ -31,49 +31,41 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest request) {
-        try {
-            UserResponse userResponse = userService.createUser(request, Role.USER);
+        UserResponse userResponse = userService.createUser(request, Role.USER);
 
-            // Generar JWT después del registro
-            String token = jwtUtil.generateToken(
-                    userResponse.username(),
-                    userResponse.id(),
-                    userResponse.role().name());
+        // Generar JWT después del registro
+        String token = jwtUtil.generateToken(
+                userResponse.username(),
+                userResponse.id(),
+                userResponse.role().name());
 
-            RegisterResponse registerResponse = new RegisterResponse(token, userResponse);
-            return ResponseEntity.ok(registerResponse);
-        } catch (RuntimeException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+        RegisterResponse registerResponse = new RegisterResponse(token, userResponse);
+        return ResponseEntity.ok(registerResponse);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest request) {
-        try {
-            boolean isValid = userService.validateCredentials(request.username(), request.password());
+        boolean isValid = userService.validateCredentials(request.username(), request.password());
 
-            if (!isValid) {
-                return ResponseEntity.status(401).body("Credenciales inválidas");
-            }
-
-            var userOpt = userService.findByUsername(request.username());
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.status(401).body("Usuario no encontrado");
-            }
-
-            UserResponse userResponse = userOpt.get();
-
-            // Generar JWT
-            String token = jwtUtil.generateToken(
-                    userResponse.username(),
-                    userResponse.id(),
-                    userResponse.role().name());
-
-            RegisterResponse registerResponse = new RegisterResponse(token, userResponse);
-            return ResponseEntity.ok(registerResponse);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error en login: " + e.getMessage());
+        if (!isValid) {
+            return ResponseEntity.status(401).body("Credenciales inválidas");
         }
+
+        var userOpt = userService.findByUsername(request.username());
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(401).body("Usuario no encontrado");
+        }
+
+        UserResponse userResponse = userOpt.get();
+
+        // Generar JWT
+        String token = jwtUtil.generateToken(
+                userResponse.username(),
+                userResponse.id(),
+                userResponse.role().name());
+
+        RegisterResponse registerResponse = new RegisterResponse(token, userResponse);
+        return ResponseEntity.ok(registerResponse);
     }
 
     @GetMapping("/check-username/{username}")

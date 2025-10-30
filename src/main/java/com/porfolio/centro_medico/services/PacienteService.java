@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.porfolio.centro_medico.exceptions.BusinessException;
+import com.porfolio.centro_medico.exceptions.ResourceNotFoundException;
 import com.porfolio.centro_medico.models.Paciente;
 import com.porfolio.centro_medico.models.User;
 import com.porfolio.centro_medico.models.dto.PacienteRequest;
@@ -31,11 +33,11 @@ public class PacienteService implements IPacienteService {
     @Override
     public PacienteResponse createPaciente(PacienteRequest request) {
         if (existsByDni(request.dni())) {
-            throw new RuntimeException("El DNI ya está registrado");
+            throw new BusinessException("El DNI ya está registrado");
         }
 
         User user = userService.findEntityById(request.userId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         Paciente paciente = dtoMapper.toEntity(request);
         paciente.setUser(user);
@@ -66,7 +68,7 @@ public class PacienteService implements IPacienteService {
     @Override
     public PacienteResponse updatePaciente(Long id, PacienteRequest request) {
         Paciente paciente = pacienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con ID: " + id));
 
         dtoMapper.updatePacienteFromRequest(paciente, request);
         paciente.setUpdatedAt(LocalDateTime.now());
@@ -78,7 +80,7 @@ public class PacienteService implements IPacienteService {
     @Override
     public void deletePaciente(Long id) {
         Paciente paciente = pacienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con ID: " + id));
         pacienteRepository.delete(paciente);
     }
 
@@ -95,7 +97,7 @@ public class PacienteService implements IPacienteService {
     @Override
     public PacienteResponse getPacienteResponse(Long id) {
         Paciente paciente = pacienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con ID: " + id));
         return dtoMapper.toResponse(paciente);
     }
 }

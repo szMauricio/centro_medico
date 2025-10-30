@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.porfolio.centro_medico.exceptions.BusinessException;
+import com.porfolio.centro_medico.exceptions.ResourceNotFoundException;
 import com.porfolio.centro_medico.models.Medico;
 import com.porfolio.centro_medico.models.Paciente;
 import com.porfolio.centro_medico.models.Turno;
@@ -36,14 +38,15 @@ public class TurnoService implements ITurnoService {
     @Override
     public TurnoResponse createTurno(TurnoRequest request) {
         if (request.fechaHora().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("No se pueden crear turnos en fechas pasadas");
+            throw new BusinessException("No se pueden crear turnos en fechas pasadas");
         }
 
         Paciente paciente = pacienteService.findEntityById(request.pacienteId())
-                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Paciente no encontrado con ID:" + request.pacienteId()));
 
         Medico medico = medicoService.findEntityById(request.medicoId())
-                .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Médico no encontrado con ID: " + request.medicoId()));
 
         // Validar que no exista un turno en la misma fecha/hora para el mismo médico
         List<Turno> turnosExistentes = turnoRepository.findByMedicoAndFechaHoraBetween(
@@ -52,7 +55,7 @@ public class TurnoService implements ITurnoService {
                 request.fechaHora().plusMinutes(30));
 
         if (!turnosExistentes.isEmpty()) {
-            throw new RuntimeException("El médico ya tiene un turno en ese horario");
+            throw new BusinessException("El médico ya tiene un turno en ese horario");
         }
 
         Turno turno = dtoMapper.toEntity(request, paciente, medico);
@@ -97,12 +100,12 @@ public class TurnoService implements ITurnoService {
     @Override
     public TurnoResponse updateTurno(Long id, TurnoRequest request) {
         Turno turno = turnoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Turno no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Turno no encontrado con ID: " + id));
 
         // Si se cambia la fecha/hora, validar nuevamente
         if (request.fechaHora() != null && !request.fechaHora().equals(turno.getFechaHora())) {
             if (request.fechaHora().isBefore(LocalDateTime.now())) {
-                throw new RuntimeException("No se puede cambiar a una fecha pasada");
+                throw new BusinessException("No se puede cambiar a una fecha pasada");
             }
 
             // Validar disponibilidad del médico en la nueva fecha
@@ -112,7 +115,7 @@ public class TurnoService implements ITurnoService {
                     request.fechaHora().plusMinutes(30));
 
             if (!turnosExistentes.isEmpty()) {
-                throw new RuntimeException("El médico ya tiene un turno en ese horario");
+                throw new BusinessException("El médico ya tiene un turno en ese horario");
             }
 
             turno.setFechaHora(request.fechaHora());
@@ -131,10 +134,10 @@ public class TurnoService implements ITurnoService {
     @Override
     public void cancelarTurno(Long id) {
         Turno turno = turnoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Turno no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Turno no encontrado con ID: " + id));
 
         if (turno.getEstado() == EstadoTurno.COMPLETADO) {
-            throw new RuntimeException("No se puede cancelar un turno completado");
+            throw new BusinessException("No se puede cancelar un turno completado");
         }
 
         turno.setEstado(EstadoTurno.CANCELADO);
@@ -145,10 +148,10 @@ public class TurnoService implements ITurnoService {
     @Override
     public void completarTurno(Long id) {
         Turno turno = turnoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Turno no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Turno no encontrado con ID: " + id));
 
         if (turno.getEstado() == EstadoTurno.CANCELADO) {
-            throw new RuntimeException("No se puede completar un turno cancelado");
+            throw new BusinessException("No se puede completar un turno cancelado");
         }
 
         turno.setEstado(EstadoTurno.COMPLETADO);
@@ -159,14 +162,14 @@ public class TurnoService implements ITurnoService {
     @Override
     public TurnoResponse getTurnoResponse(Long id) {
         Turno turno = turnoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Turno no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Turno no encontrado con ID: " + id));
         return dtoMapper.toResponse(turno);
     }
 
     @Override
     public List<TurnoResponse> findByMedicoId(Long medicoId) {
         Medico medico = medicoService.findEntityById(medicoId)
-                .orElseThrow(() -> new RuntimeException("Médico no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Médico no encontrado con ID: " + medicoId));
 
         return turnoRepository.findByMedico(medico).stream()
                 .map(dtoMapper::toResponse)
@@ -176,7 +179,7 @@ public class TurnoService implements ITurnoService {
     @Override
     public List<TurnoResponse> findByPacienteId(Long pacienteId) {
         Paciente paciente = pacienteService.findEntityById(pacienteId)
-                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con ID: " + pacienteId));
 
         return turnoRepository.findByPaciente(paciente).stream()
                 .map(dtoMapper::toResponse)

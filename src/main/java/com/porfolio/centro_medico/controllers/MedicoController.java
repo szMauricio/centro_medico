@@ -53,42 +53,27 @@ public class MedicoController {
         System.out.println("Request recibido: " + request);
         System.out.println("Nombre: " + request.nombre());
         System.out.println("Email: " + request.email());
-        try {
-            return ResponseEntity.ok(medicoService.createMedico(request));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
+        return ResponseEntity.ok(medicoService.createMedico(request));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> updateMedico(@PathVariable Long id, @Valid @RequestBody MedicoRequest request) {
-        try {
-            return ResponseEntity.ok(medicoService.updateMedico(id, request));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.ok(medicoService.updateMedico(id, request));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> deactivateMedico(@PathVariable Long id) {
-        try {
-            medicoService.deactivateMedico(id);
-            return ResponseEntity.ok("Médico desactivado correctamente");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        medicoService.deactivateMedico(id);
+        return ResponseEntity.ok("Médico desactivado correctamente");
     }
 
     @PatchMapping("/{id}/activate")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> activateMedico(@PathVariable Long id) {
-        try {
-            medicoService.activateMedico(id);
-            return ResponseEntity.ok("Médico activado correctamente");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        medicoService.activateMedico(id);
+        return ResponseEntity.ok("Médico activado correctamente");
     }
 }

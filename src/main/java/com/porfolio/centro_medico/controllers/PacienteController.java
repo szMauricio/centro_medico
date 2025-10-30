@@ -43,33 +43,21 @@ public class PacienteController {
     @PostMapping
     @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<?> createPaciente(@Valid @RequestBody PacienteRequest request) {
-        try {
-            PacienteResponse paciente = pacienteService.createPaciente(request);
-            return ResponseEntity.ok(paciente);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        PacienteResponse paciente = pacienteService.createPaciente(request);
+        return ResponseEntity.ok(paciente);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePaciente(@PathVariable Long id, @Valid @RequestBody PacienteRequest request) {
-        try {
-            PacienteResponse paciente = pacienteService.updatePaciente(id, request);
-            return ResponseEntity.ok(paciente);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        PacienteResponse paciente = pacienteService.updatePaciente(id, request);
+        return ResponseEntity.ok(paciente);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> deletePaciente(@PathVariable Long id) {
-        try {
-            pacienteService.deletePaciente(id);
-            return ResponseEntity.ok("Paciente eliminado correctamente");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        pacienteService.deletePaciente(id);
+        return ResponseEntity.ok("Paciente eliminado correctamente");
     }
 
     @GetMapping("/dni/{dni}")

@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.porfolio.centro_medico.exceptions.BusinessException;
+import com.porfolio.centro_medico.exceptions.ResourceNotFoundException;
 import com.porfolio.centro_medico.models.Medico;
 import com.porfolio.centro_medico.models.User;
 import com.porfolio.centro_medico.models.dto.RegisterRequest;
@@ -35,7 +37,7 @@ public class MedicoService implements IMedicoService {
     @Override
     public MedicoResponse createMedico(MedicoRequest request) {
         if (medicoRepository.findByEmail(request.email()).isPresent()) {
-            throw new RuntimeException("El email ya está registrado");
+            throw new BusinessException("El email ya está registrado");
         }
 
         UserResponse userResponse = userService.createUser(
@@ -46,7 +48,7 @@ public class MedicoService implements IMedicoService {
                 Role.MEDICO);
 
         User user = userService.findEntityById(userResponse.id())
-                .orElseThrow(() -> new RuntimeException("Error al crear usuario médico"));
+                .orElseThrow(() -> new ResourceNotFoundException("Error al crear usuario médico"));
 
         Medico medico = dtoMapper.toEntity(request);
         medico.setUser(user);
@@ -79,7 +81,7 @@ public class MedicoService implements IMedicoService {
     @Override
     public MedicoResponse updateMedico(Long id, MedicoRequest request) {
         Medico medico = medicoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Médico no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Médico no encontrado con ID: " + id));
 
         dtoMapper.updateMedicoFromRequest(medico, request);
         medico.setUpdatedAt(LocalDateTime.now());
@@ -91,7 +93,7 @@ public class MedicoService implements IMedicoService {
     @Override
     public void deactivateMedico(Long id) {
         Medico medico = medicoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Médico no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Médico no encontrado con ID: " + id));
 
         medico.setIsActive(false);
         medico.setUpdatedAt(LocalDateTime.now());
@@ -101,7 +103,7 @@ public class MedicoService implements IMedicoService {
     @Override
     public void activateMedico(Long id) {
         Medico medico = medicoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Médico no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Médico no encontrado con ID: " + id));
 
         medico.setIsActive(true);
         medico.setUpdatedAt(LocalDateTime.now());
@@ -116,7 +118,7 @@ public class MedicoService implements IMedicoService {
     @Override
     public MedicoResponse getMedicoResponse(Long id) {
         Medico medico = medicoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Medico no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Medico no encontrado con ID: " + id));
         return dtoMapper.toResponse(medico);
     }
 
